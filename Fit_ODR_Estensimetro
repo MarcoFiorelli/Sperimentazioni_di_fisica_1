@@ -1,0 +1,144 @@
+#CARICO LIBRERIE
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import odr
+#LETTURA DA FILE ALLUNGAMENTO
+file_name='data_allungamento_1.txt'
+dati=np.loadtxt(file_name)
+print (dati)
+xm=dati[:,1]
+Fm=dati[:,0]
+
+#LETTURA DA FILE ACCORCIAMENTO
+file_name_acc='data_accorciamento_1.txt'
+dati_acc=np.loadtxt(file_name_acc)
+print (dati_acc)
+xm_acc=dati_acc[:,1]
+
+#INCERTEZZE
+S_F=2*10/np.sqrt(24)
+S_x=10
+print(S_F)
+print(S_x)
+
+#CONVERSIONI ALLUNGAMENTO
+xm=dati[:,1]*10 *pow(10, -6)
+Fm=dati[:,0]*0.001*9.80652*4
+
+S_F=(2*10/np.sqrt(24))*0.001*9.80652*4
+S_x=10*pow(10, -6)
+
+print(xm)
+print(Fm)
+
+#CONVERSIONI ACCORCIAMENTO
+xm_acc=dati_acc[:,1]*10 *pow(10, -6)
+print(xm_acc)
+
+#GRAFICO
+plt.figure(figsize=(10,6))
+plt.xlabel(r'$\Delta$x(m)', fontsize=13)
+plt.ylabel(r'$\Delta$F(N)', fontsize=13)
+
+#ALLUNGAMENTO
+plt.errorbar(xm, Fm, xerr=S_x, yerr=S_F, fmt='none', ecolor='red', capsize=2, 
+             capthick=2, markersize=8, linewidth=2, label='Allungamento')
+plt.grid(alpha=0.3)
+plt.xticks(fontsize=14) 
+plt.yticks(fontsize=14)
+plt.minorticks_on()
+
+#FIT ALLUNGAMENTO
+from scipy import odr
+def funzione_lineare(B, x):
+    return B[0]*x+B[1]
+modello_lineare = odr.Model(funzione_lineare)
+data=odr.RealData(xm, Fm, sx=S_x, sy=S_F)
+mio_odr=odr.ODR(data, modello_lineare, beta0=[1.0, 1.0])
+risultato=mio_odr.run()
+#risultato.pprint()
+pendenza_calcolata=risultato.beta[0]
+intercetta_calcolata=risultato.beta[1]
+errore_pendenza=risultato.sd_beta[0]
+errore_intercetta=risultato.sd_beta[1]
+print(f'\nPendenza:{pendenza_calcolata}\u00B1{errore_pendenza}')
+print(f'Intercetta: {intercetta_calcolata}\u00B1{errore_intercetta}')
+
+a=risultato.beta[0]
+b=risultato.beta[1]
+err_a=risultato.sd_beta[0]
+err_b=risultato.sd_beta[1]
+x_linea=np.linspace(0,max(xm), 100)
+y_linea=a*x_linea+b
+plt.plot(x_linea, y_linea, color='red', linestyle='-', linewidth=1)
+
+E=0.7*a/(np.pi*pow((0.000279/2),2))
+s_E=np.sqrt(pow(0.002*a/(np.pi*pow((0.000279/2),2)),   2)+
+            pow(err_a * 0.700/(np.pi*pow((0.000279/2),2)),   2)+
+            pow((1/100)*(0.000279*np.pi*0.000279/2)*a*0.700/pow((np.pi*pow((0.000279/2),2)),2),   2))
+print(E)
+print(s_E)
+
+
+
+#ACCORCIAMENTO
+plt.errorbar(xm_acc, Fm, xerr=S_x, yerr=S_F, fmt='none', ecolor='blue', capsize=2, 
+             capthick=2, markersize=8, linewidth=2, label='Accorciamento')
+plt.grid(alpha=0.3)
+
+#FIT ACCORCIAMENTO
+def funzione_lineare_acc(A, x):
+    return A[0]*x+A[1]
+modello_lineare_acc = odr.Model(funzione_lineare_acc)
+data_acc=odr.RealData(xm_acc, Fm, sx=S_x, sy=S_F)
+mio_odr_acc=odr.ODR(data_acc, modello_lineare_acc, beta0=[1.0, 1.0])
+risultato_acc=mio_odr_acc.run()
+#risultato.pprint()
+pendenza_calcolata_acc=risultato_acc.beta[0]
+intercetta_calcolata_acc=risultato_acc.beta[1]
+errore_pendenza_acc=risultato_acc.sd_beta[0]
+errore_intercetta_acc=risultato_acc.sd_beta[1]
+print(f'\nPendenza_acc:{pendenza_calcolata_acc}\u00B1{errore_pendenza_acc}')
+print(f'Intercetta_acc: {intercetta_calcolata_acc}\u00B1{errore_intercetta_acc}')
+
+
+a_acc=risultato_acc.beta[0]
+b_acc=risultato_acc.beta[1]
+err_a_acc=risultato_acc.sd_beta[0]
+err_b_acc=risultato_acc.sd_beta[1]
+x_linea_acc=np.linspace(0,max(xm_acc), 100)
+y_linea_acc=a_acc*x_linea_acc+b_acc
+plt.plot(x_linea_acc, y_linea_acc, color='blue', linestyle='-', linewidth=1)
+
+E_acc=0.7*a_acc/(np.pi*pow((0.000279/2),2))
+s_E_acc=np.sqrt(pow(0.002*a_acc/(np.pi*pow((0.000279/2),2)),   2)+
+            pow(err_a_acc * 0.700/(np.pi*pow((0.000279/2),2)),   2)+
+            pow((1/100)*(0.000279*np.pi*0.000279/2)*a_acc*0.700/pow((np.pi*pow((0.000279/2),2)),2),   2))
+print(E_acc)
+print(s_E_acc)
+
+plt.legend()
+plt.tight_layout()
+
+#SALVO GRAFICO
+#plt.savefig('fit_estensimetro1.pdf')
+plt.savefig('fit_estensimetro1.jpg')
+plt.show()
+
+#COVARIANZA E R
+matrice_covarianza = np.cov(xm, Fm)
+covarianza = matrice_covarianza[0, 1]
+print(f"Covarianza tra x e y: {covarianza:.6f}")
+
+matrice_correlazione = np.corrcoef(xm, Fm)
+r_numpy = matrice_correlazione[0, 1]
+print(f"Coefficiente di correlazione (r)): {r_numpy:.6f}")
+
+#COVARIANZA E R
+matrice_covarianza_acc = np.cov(xm_acc, Fm)
+covarianza_acc = matrice_covarianza_acc[0, 1]
+print(f"Covarianza tra x e y (accorciamento): {covarianza_acc:.6f}")
+
+matrice_correlazione_acc = np.corrcoef(xm_acc, Fm)
+r_numpy_acc = matrice_correlazione_acc[0, 1]
+print(f"Coefficiente di correlazione (accorciamento) (r_acc)): {r_numpy_acc:.6f}")
