@@ -1,0 +1,61 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import odr
+
+E_all_1=207561776257.53845
+err_E_all_1=4320419826.782156
+
+E_acc_1=206794589810.73718
+err_E_acc_1=4213497805.329656
+
+
+E_all_2=207573339986.2232
+err_E_all_2=4249668538.1076846
+
+E_acc_2=205935458161.46136
+err_E_acc_2=4178100272.216191
+
+
+E_all_3=208100777397.57175
+err_E_all_3=4243080507.4995866
+
+E_acc_3=208187378397.12625
+err_E_acc_3=4251622146.796546
+
+E_medio=(E_all_1/pow(err_E_all_1, 2)+E_all_2/pow(err_E_all_2, 2)+E_all_3/pow(err_E_all_3, 2)+E_acc_1/pow(err_E_acc_1, 2)
+         +E_acc_2/pow(err_E_acc_2, 2)+E_acc_3/pow(err_E_acc_3, 2))/(1/pow(err_E_all_1, 2)+1/pow(err_E_all_2, 2)
+                                                                    +1/pow(err_E_all_3, 2)+1/pow(err_E_acc_1, 2)
+                                                                    +1/pow(err_E_acc_2, 2)+1/pow(err_E_acc_3, 2))
+print(E_medio)
+
+err_E_medio=np.sqrt(1/(1/pow(err_E_all_1, 2)+1/pow(err_E_all_2, 2)
+        +1/pow(err_E_all_3, 2)+1/pow(err_E_acc_1, 2)+1/pow(err_E_acc_2, 2)+1/pow(err_E_acc_3, 2)))
+print(err_E_medio)
+
+E_valori = np.array([E_all_1, E_all_2, E_all_3, 
+                     E_acc_1, E_acc_2, E_acc_3])
+err_E_valori = np.array([err_E_all_1, err_E_all_2, err_E_all_3, 
+                         err_E_acc_1, err_E_acc_2, err_E_acc_3])
+
+x_punti = np.array([1, 2, 3, 4, 5, 6])
+etichette_x = ['All 1', 'All 2', 'All 3', 'Acc 1', 'Acc 2', 'Acc 3']
+
+plt.figure(figsize=(10,6))
+
+plt.errorbar(x_punti, E_valori, yerr=err_E_valori, fmt='o', color='black', 
+             ecolor='red', capsize=5, capthick=2, markersize=8, label='Modulo di young')
+
+plt.axhline(y=E_medio, color='green', linestyle='--', linewidth=2, label='Media Pesata')
+plt.axhspan(E_medio - err_E_medio, E_medio + err_E_medio, color='green', alpha=0.2, label='Incertezza Media Pesata')
+
+plt.xticks(x_punti, etichette_x, fontsize=11)
+plt.xlabel('Set di Misure', fontsize=13)
+plt.ylabel('Modulo di Young E (Pa)', fontsize=13)
+
+plt.grid(alpha=0.3, axis='y')
+plt.legend()
+plt.tight_layout()
+
+plt.savefig('Confronto.jpg')
+
+plt.show()
